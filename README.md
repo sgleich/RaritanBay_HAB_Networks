@@ -148,4 +148,103 @@ y4 <- plotYear(dfMeanz4,"4-10 Years After Sandy\n2016-2021\nSite 6")
 # ggarrange(y1,y2,y3,y4,ncol=2,nrow=2,common.legend = TRUE)
 # ggsave("../../Figs/Figure4.pdf",width=8,height=4)
 ```
-## Next
+## Make a network at each site
+```
+# Load data
+dfPhyto <- read.csv("RB_Phyto.csv",header=TRUE)
+dfZoo <- read.csv("RB_Zoo.csv",header=TRUE)
+dfZoo$TOTAL <- NULL
+dfZoo$X.1 <- NULL
+dfZoo2 <- mutate_all(dfZoo, function(x) as.numeric(as.character(x)))
+dfPhyto2 <- mutate_all(dfPhyto, function(x) as.numeric(as.character(x)))
+
+# Combine phytoplankton and zooplankton data
+dfTotal <- left_join(dfZoo2,dfPhyto2)
+
+# Make network function
+makeNet <- function(df,site){
+  dfSite <- subset(df,SITE==site)
+  dfSite$X <- as.character(dfSite$X)
+  monthz <- substr(dfSite$X,1,2)
+  monthz <- ifelse(monthz>12,substr(monthz,1,1),monthz)
+  dfSite$MOY <- as.numeric(monthz)
+  MCount <- c((dfSite$MOY - 3) + 12*(dfSite$YEAR - 1))
+  dfSite$MOY <- NULL
+  dfSite <- dfSite[,5:ncol(dfSite)]
+  dfSite <- as.data.frame(t(dfSite))
+  dfSite <- subset(dfSite,rowSums(dfSite)!=0)
+  dfSite <- as.data.frame(t(dfSite))
+  
+  # NetGAM - remove temporal signal
+  gamOut <- netGAM.df(dfSite,as.numeric(monthz),MCount,clrt=FALSE)
+  
+  # Glasso - graphical lasso network analysis
+  gamOut <- huge.npn(gamOut)
+  lams  <- getLamPath(getMaxCov(as.matrix(gamOut)), .01, len=30)
+  hugeargs <- list(lambda=lams, verbose=FALSE)
+  netOut <- batch.pulsar(gamOut, fun=huge::huge, fargs=hugeargs,rep.num=50, criterion='stars')
+  fit <- refit(netOut)$refit
+  fit.fin <- fit$stars
+  fit.fin <- as.matrix(fit.fin)
+  colnames(fit.fin)<- colnames(gamOut)
+  rownames(fit.fin)<- colnames(gamOut)
+  
+  # SCC - spearman correlation coefficient to use as edge weights
+  cor <- corr.test(gamOut,method="spearman")
+  cor <- cor$r
+  fitCor <- fit.fin*cor
+  return(fitCor)}
+
+# Make networks for each site
+net1 <- makeNet(dfTotal,1)
+net2 <- makeNet(dfTotal,2)
+net3 <- makeNet(dfTotal,3)
+net4 <- makeNet(dfTotal,4)
+net5 <- makeNet(dfTotal,5)
+net6 <- makeNet(dfTotal,6)
+
+# Edgelists
+get_upper_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+
+edge1 <- net1  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename(edge = value)%>%filter(edge!=0)
+edge2 <- net2  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename(edge = value)%>%filter(edge!=0)
+edge3 <- net3  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename(edge = value)%>%filter(edge!=0)
+edge4 <- net4  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename(edge = value)%>%filter(edge!=0)
+edge5 <- net5  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename(edge = value)%>%filter(edge!=0)
+edge6 <- net6  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename(edge = value)%>%filter(edge!=0)
+
+# Prepare data for igraph
+mat1 <- edge1
+mat1$edge <- NULL
+mat1 <- as.matrix(mat1)
+
+mat2 <- edge2
+mat2$edge <- NULL
+mat2 <- as.matrix(mat2)
+
+mat3 <- edge3
+mat3$edge <- NULL
+mat3 <- as.matrix(mat3)
+
+mat4 <- edge4
+mat4$edge <- NULL
+mat4 <- as.matrix(mat4)
+
+mat5 <- edge5
+mat5$edge <- NULL
+mat5 <- as.matrix(mat5)
+
+mat6 <- edge6
+mat6$edge <- NULL
+mat6 <- as.matrix(mat6)
+
+# Make igraph network objects
+netwk1 <- graph_from_edgelist(mat1,directed=FALSE)
+netwk2 <- graph_from_edgelist(mat2,directed=FALSE)
+netwk3 <- graph_from_edgelist(mat3,directed=FALSE)
+netwk4 <- graph_from_edgelist(mat4,directed=FALSE)
+netwk5 <- graph_from_edgelist(mat5,directed=FALSE)
+netwk6 <- graph_from_edgelist(mat6,directed=FALSE)
