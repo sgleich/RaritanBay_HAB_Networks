@@ -208,6 +208,7 @@ makeNet <- function(df,site){
   gamOut$X <- as.numeric(Xz)
   gamOut <- left_join(gamOut,environ)
   gamOut$X <- NULL
+  gamOut$YEAR <- NULL
   
   # Glasso
   gamOut <- huge.npn(gamOut)
