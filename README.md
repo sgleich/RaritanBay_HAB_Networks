@@ -436,7 +436,7 @@ fin2 <- NULL
 for(species in 1:14){
   sub <- subset(edgezHab,Var1==habz[species]|Var2==habz[species])
   namez <- V(netwk6)$name
-  namez <- namez[-c(107:115)]
+  namez <- namez[-c(109:117)]
   ind <- which(namez==habz[species])
   namez <- namez[-c(ind)]
   s1 <- sum(sub$Var1 %in% namez)
@@ -470,5 +470,5 @@ finMelt2 <- melt(fin2,id.vars=c("Species"))
 posneg <- finMelt2%>%ggplot(aes(x=Species,y=value,group=Species,fill=variable))+geom_bar(stat="identity",color="black")+scale_fill_manual(name="Association",values=c("dodgerblue","indianred"))+theme_classic(base_size=12)+scale_x_discrete(breaks=c("ALEX","ASAN","DINOP","HAKASH","HROT","HTRI","KARLO","OSCIL","PLIKE","PMIC","PMIN","PSEUDO","SCRIP","SNOW"),labels=c(expression(italic("Alexandrium spp.")),expression(italic("Akashiwo sanguinea")),expression(italic("Dinophysis acuminata")),expression(italic("Heterosigma akashiwo")),expression(italic("Heterocapsa rotundata")),expression(italic("Heterocapsa triquetra")),expression(italic("Karlodinium spp.")),expression(italic("Oscillatoria spp.")),expression(italic("Pfiestieria-like")),expression(italic("Prorocentrum micans")),expression(italic("Prorocentrum minimum")),expression(italic("Pseudo-nitzschia spp.")),expression(italic("Scrippsiella trochoidea")),expression(italic("Snowella spp."))))+theme(axis.text.x = element_text(angle = 45,hjust=1))+ylab("Number of Associations")+xlab("HAB Species")+ylim(0,15)
 
 ggarrange(bioabio,posneg,ncol=1,nrow=2)
-ggsave("Fig4_Site6.pdf",width=8,height=12)
+ggsave("BiAbio_PosNeg.pdf",width=8,height=12)
 ```
