@@ -161,7 +161,34 @@ dfPhyto2 <- mutate_all(dfPhyto, function(x) as.numeric(as.character(x)))
 # Combine phytoplankton and zooplankton data
 dfTotal <- left_join(dfZoo2,dfPhyto2)
 
-# Make network function
+environ <- read.csv(file="Environ.csv",header=TRUE)
+environ$variable <- rownames(environ)
+environ <- environ[environ$YEAR != 2022,]
+# environ6 <- environ[environ$SITE == 6,]
+environ <- environ[environ$DEPTH == 1,]
+environ$CONDUCTIVITY..mS.cm. <- NULL
+environ$DO....SAT.<- NULL
+environ$variable <- NULL
+
+colz <- colsplit(environ$DATE,"/",c("month","day","year"))
+environ$X <- paste(colz$month,environ$YEAR,environ$SITE,sep="")
+environ$DATE <- NULL
+environ$YEAR <- NULL
+environ$SEASON <- NULL
+environ$DEPTH <- NULL
+environ$SITE <- NULL
+
+colnames(environ) <- c("TEMP","pH","SAL","DO","Secchi","NO3","NH4","SRP","Si","X")
+environ <- mutate_all(environ, function(x) as.numeric(as.character(x)))
+
+
+dfTotal$SEAS <- NULL
+dfTotal$DATE <- NULL
+dfTotal$SEASON <- NULL
+dfTotal$DEPTH <- NULL
+dfTotal$SITE <- as.numeric(dfTotal$SITE)
+
+# Make network
 makeNet <- function(df,site){
   dfSite <- subset(df,SITE==site)
   dfSite$X <- as.character(dfSite$X)
@@ -170,15 +197,19 @@ makeNet <- function(df,site){
   dfSite$MOY <- as.numeric(monthz)
   MCount <- c((dfSite$MOY - 3) + 12*(dfSite$YEAR - 1))
   dfSite$MOY <- NULL
-  dfSite <- dfSite[,5:ncol(dfSite)]
+  Xz <- dfSite$X
+  dfSite <- dfSite[,3:ncol(dfSite)]
   dfSite <- as.data.frame(t(dfSite))
   dfSite <- subset(dfSite,rowSums(dfSite)!=0)
   dfSite <- as.data.frame(t(dfSite))
   
-  # NetGAM - remove temporal signal
+  # NetGAM
   gamOut <- netGAM.df(dfSite,as.numeric(monthz),MCount,clrt=FALSE)
+  gamOut$X <- as.numeric(Xz)
+  gamOut <- left_join(gamOut,environ)
+  gamOut$X <- NULL
   
-  # Glasso - graphical lasso network analysis
+  # Glasso
   gamOut <- huge.npn(gamOut)
   lams  <- getLamPath(getMaxCov(as.matrix(gamOut)), .01, len=30)
   hugeargs <- list(lambda=lams, verbose=FALSE)
@@ -188,14 +219,11 @@ makeNet <- function(df,site){
   fit.fin <- as.matrix(fit.fin)
   colnames(fit.fin)<- colnames(gamOut)
   rownames(fit.fin)<- colnames(gamOut)
-  
-  # SCC - spearman correlation coefficient to use as edge weights
   cor <- corr.test(gamOut,method="spearman")
   cor <- cor$r
   fitCor <- fit.fin*cor
   return(fitCor)}
 
-# Make networks for each site
 net1 <- makeNet(dfTotal,1)
 net2 <- makeNet(dfTotal,2)
 net3 <- makeNet(dfTotal,3)
@@ -216,7 +244,6 @@ edge4 <- net4  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename
 edge5 <- net5  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename(edge = value)%>%filter(edge!=0)
 edge6 <- net6  %>% get_upper_tri() %>% reshape2::melt() %>% na.omit() %>% rename(edge = value)%>%filter(edge!=0)
 
-# Prepare data for igraph
 mat1 <- edge1
 mat1$edge <- NULL
 mat1 <- as.matrix(mat1)
@@ -241,10 +268,206 @@ mat6 <- edge6
 mat6$edge <- NULL
 mat6 <- as.matrix(mat6)
 
-# Make igraph network objects
 netwk1 <- graph_from_edgelist(mat1,directed=FALSE)
 netwk2 <- graph_from_edgelist(mat2,directed=FALSE)
 netwk3 <- graph_from_edgelist(mat3,directed=FALSE)
 netwk4 <- graph_from_edgelist(mat4,directed=FALSE)
 netwk5 <- graph_from_edgelist(mat5,directed=FALSE)
 netwk6 <- graph_from_edgelist(mat6,directed=FALSE)
+```
+## Make network image plots for each site
+```
+environ<- c("TEMP","pH","SAL","DO","Secchi","NO3","NH4","SRP" ,"Si")
+
+# Network 1
+# Node colors
+V(netwk1)$col<- "grey"
+V(netwk1)$col <- ifelse(V(netwk1)$name=="PSEUDO","forestgreen",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="SNOW","dodgerblue",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="SCRIP","darkgoldenrod3",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="PMIC","orchid",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="PMIN","hotpink1",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="PLIKE","coral1",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="OSCIL","cyan",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="KARLO","darkolivegreen1",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="HTRI","indianred",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="HROT","khaki1",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="HAKASH","aquamarine",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="DINOP","cornflowerblue",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="ASAN","firebrick1",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name=="ALEX","hotpink4",V(netwk1)$col)
+V(netwk1)$col <- ifelse(V(netwk1)$name %in% environ,"grey20",V(netwk1)$col)
+
+pdf("Site1_Netwk.pdf",width=6,height=4)
+plot(netwk1,vertex.label=NA,vertex.size=7,vertex.color=V(netwk1)$col,layout=layout_with_fr(netwk1),main="Site 1")
+dev.off()
+
+# Network 2
+# Node colors
+V(netwk2)$col <- "grey"
+V(netwk2)$col <- ifelse(V(netwk2)$name=="PSEUDO","forestgreen",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="SNOW","dodgerblue",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="SCRIP","darkgoldenrod3",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="PMIC","orchid",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="PMIN","hotpink1",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="PLIKE","coral1",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="OSCIL","cyan",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="KARLO","darkolivegreen1",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="HTRI","indianred",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="HROT","khaki1",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="HAKASH","aquamarine",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="DINOP","cornflowerblue",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="ASAN","firebrick1",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name=="ALEX","hotpink4",V(netwk2)$col)
+V(netwk2)$col <- ifelse(V(netwk2)$name %in% environ,"grey20",V(netwk2)$col)
+
+pdf("Site2_Netwk.pdf",width=6,height=4)
+plot(netwk2,vertex.label=NA,vertex.size=7,vertex.color=V(netwk2)$col,layout=layout_with_fr(netwk2),main="Site 2")
+dev.off()
+
+# Network 3
+# Nodes
+V(netwk3)$col <- "grey"
+V(netwk3)$col <- ifelse(V(netwk3)$name=="PSEUDO","forestgreen",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="SNOW","dodgerblue",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="SCRIP","darkgoldenrod3",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="PMIC","orchid",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="PMIN","hotpink1",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="PLIKE","coral1",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="OSCIL","cyan",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="KARLO","darkolivegreen1",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="HTRI","indianred",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="HROT","khaki1",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="HAKASH","aquamarine",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="DINOP","cornflowerblue",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="ASAN","firebrick1",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name=="ALEX","hotpink4",V(netwk3)$col)
+V(netwk3)$col <- ifelse(V(netwk3)$name %in% environ,"grey20",V(netwk3)$col)
+
+pdf("Site3_Netwk.pdf",width=6,height=4)
+plot(netwk3,vertex.label=NA,vertex.size=7,vertex.color=V(netwk3)$col,layout=layout_with_fr(netwk3),main="Site 3")
+dev.off()
+
+# Network 4
+# Nodes
+V(netwk4)$col <- "grey"
+V(netwk4)$col <- ifelse(V(netwk4)$name=="PSEUDO","forestgreen",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="SNOW","dodgerblue",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="SCRIP","darkgoldenrod3",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="PMIC","orchid",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="PMIN","hotpink1",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="PLIKE","coral1",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="OSCIL","cyan",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="KARLO","darkolivegreen1",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="HTRI","indianred",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="HROT","khaki1",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="HAKASH","aquamarine",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="DINOP","cornflowerblue",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="ASAN","firebrick1",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name=="ALEX","hotpink4",V(netwk4)$col)
+V(netwk4)$col <- ifelse(V(netwk4)$name %in% environ,"grey20",V(netwk4)$col)
+
+pdf("Site4_Netwk.pdf",width=6,height=4)
+plot(netwk4,vertex.label=NA,vertex.size=7,vertex.color=V(netwk4)$col,layout=layout_with_fr(netwk4),main="Site 4")
+dev.off()
+
+# Network 5
+# Nodes
+V(netwk5)$col <- "grey"
+V(netwk5)$col <- ifelse(V(netwk5)$name=="PSEUDO","forestgreen",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="SNOW","dodgerblue",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="SCRIP","darkgoldenrod3",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="PMIC","orchid",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="PMIN","hotpink1",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="PLIKE","coral1",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="OSCIL","cyan",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="KARLO","darkolivegreen1",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="HTRI","indianred",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="HROT","khaki1",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="HAKASH","aquamarine",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="DINOP","cornflowerblue",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="ASAN","firebrick1",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name=="ALEX","hotpink4",V(netwk5)$col)
+V(netwk5)$col <- ifelse(V(netwk5)$name %in% environ,"grey20",V(netwk5)$col)
+
+pdf("Site5_Netwk",width=6,height=4)
+plot(netwk5,vertex.label=NA,vertex.size=7,vertex.color=V(netwk5)$col,layout=layout_with_fr(netwk5),main="Site 5")
+dev.off()
+
+# Network 6
+V(netwk6)$col <- "grey"
+V(netwk6)$col <- ifelse(V(netwk6)$name=="PSEUDO","forestgreen",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="SNOW","dodgerblue",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="SCRIP","darkgoldenrod3",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="PMIC","orchid",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="PMIN","hotpink1",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="PLIKE","coral1",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="OSCIL","cyan",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="KARLO","darkolivegreen1",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="HTRI","indianred",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="HROT","khaki1",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="HAKASH","aquamarine",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="DINOP","cornflowerblue",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="ASAN","firebrick1",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name=="ALEX","hotpink4",V(netwk6)$col)
+V(netwk6)$col <- ifelse(V(netwk6)$name %in% environ,"grey20",V(netwk6)$col)
+
+pdf("Site6_Netwk.pdf",width=6,height=4)
+plot(netwk6,vertex.label=NA,vertex.size=7,vertex.color=V(netwk6)$col,layout=layout_with_fr(netwk6),main="Site 6")
+dev.off()
+```
+## Calculate network statistics
+```
+mean(degree(netwk1))
+transitivity(netwk1, type="global")
+mean_distance(netwk1)
+```
+## Calculate
+```
+edgez <- edge6
+edgez <- as.data.frame(edgez)
+sum(edgez$V1%in%environ|edgez$V2%in%environ)
+write.csv(edgez,"Site6_Edgelist_Env.csv")
+
+edgezHab <- subset(edgez,Var1%in%habz|Var2%in%habz)
+fin <- NULL
+fin2 <- NULL
+for(species in 1:14){
+  sub <- subset(edgezHab,Var1==habz[species]|Var2==habz[species])
+  namez <- V(netwk6)$name
+  namez <- namez[-c(107:115)]
+  ind <- which(namez==habz[species])
+  namez <- namez[-c(ind)]
+  s1 <- sum(sub$Var1 %in% namez)
+  s2 <- sum(sub$Var2 %in% namez)
+  s3 <- sum(sub$Var1 %in% environ)
+  s4 <- sum(sub$Var2 %in% environ)
+  s5 <- sum(sub$edge>0)
+  s6 <- sum(sub$edge<0)
+  out <- c(s1+s2,s3+s4)
+  fin <- cbind(fin,out)
+  out2 <- c(s5,s6)
+  fin2 <- cbind(fin2,out2)
+}
+fin <- as.data.frame(t(fin))
+rownames(fin) <- habz
+colnames(fin)<- c("Biotic","Abiotic")
+
+fin2 <- as.data.frame(t(fin2))
+rownames(fin2) <- habz
+colnames(fin2)<- c("Positive","Negative")
+
+fin$Species <-rownames(fin) 
+finMelt <- melt(fin,id.vars=c("Species"))
+
+bioabio <- finMelt%>%ggplot(aes(x=Species,y=value,group=Species,fill=variable))+geom_bar(stat="identity",color="black")+scale_fill_manual(name="Association",values=c("gray","gray20"),label=c("Biotic","Abiotic"))+theme_classic(base_size=12)+scale_x_discrete(breaks=c("ALEX","ASAN","DINOP","HAKASH","HROT","HTRI","KARLO","OSCIL","PLIKE","PMIC","PMIN","PSEUDO","SCRIP","SNOW"),labels=c(expression(italic("Alexandrium spp.")),expression(italic("Akashiwo sanguinea")),expression(italic("Dinophysis acuminata")),expression(italic("Heterosigma akashiwo")),expression(italic("Heterocapsa rotundata")),expression(italic("Heterocapsa triquetra")),expression(italic("Karlodinium spp.")),expression(italic("Oscillatoria spp.")),expression(italic("Pfiestieria-like")),expression(italic("Prorocentrum micans")),expression(italic("Prorocentrum minimum")),expression(italic("Pseudo-nitzschia spp.")),expression(italic("Scrippsiella trochoidea")),expression(italic("Snowella spp."))))+theme(axis.text.x = element_text(angle = 45,hjust=1))+ylab("Number of Associations")+xlab("HAB Species")
+# ggsave("Biotic_Abiotic_Site6.pdf",width=8,height=4)
+
+fin2$Species <-rownames(fin2) 
+finMelt2 <- melt(fin2,id.vars=c("Species"))
+
+posneg <- finMelt2%>%ggplot(aes(x=Species,y=value,group=Species,fill=variable))+geom_bar(stat="identity",color="black")+scale_fill_manual(name="Association",values=c("dodgerblue","indianred"))+theme_classic(base_size=12)+scale_x_discrete(breaks=c("ALEX","ASAN","DINOP","HAKASH","HROT","HTRI","KARLO","OSCIL","PLIKE","PMIC","PMIN","PSEUDO","SCRIP","SNOW"),labels=c(expression(italic("Alexandrium spp.")),expression(italic("Akashiwo sanguinea")),expression(italic("Dinophysis acuminata")),expression(italic("Heterosigma akashiwo")),expression(italic("Heterocapsa rotundata")),expression(italic("Heterocapsa triquetra")),expression(italic("Karlodinium spp.")),expression(italic("Oscillatoria spp.")),expression(italic("Pfiestieria-like")),expression(italic("Prorocentrum micans")),expression(italic("Prorocentrum minimum")),expression(italic("Pseudo-nitzschia spp.")),expression(italic("Scrippsiella trochoidea")),expression(italic("Snowella spp."))))+theme(axis.text.x = element_text(angle = 45,hjust=1))+ylab("Number of Associations")+xlab("HAB Species")+ylim(0,15)
+
+ggarrange(bioabio,posneg,ncol=1,nrow=2)
+ggsave("Fig4_Site6.pdf",width=8,height=12)
+```
