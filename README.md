@@ -3,23 +3,21 @@
 ### Last Updated: June 12, 2022
 Network analysis of the Rarity Bay Estuary phytoplankton community composition time-series dataset. See Rothenberger et al. (2014; https://doi.org/10.1007/s12237-013-9714-0) and  Rothenberger and Calomeni (2016; https://doi.org/10.1016/j.jembe.2016.03.015) for more information.
 
-## Load packages
+## Required packages
 ```
-library(formattable)
-library(htmltools)
-library(webshot)  
-library(tidyverse)
-library(reshape2)
-library(ggplot2)
-library(ggarrange)
-library(randomcoloR)
-library(NetGAM)
-library(mgcv)
-library(igraph)
-library(huge)
-library(batchtools)
-library(pulsar)
-library(psych)
+- `mgcv`
+- `tidyverse`
+- `compositions`
+- `stats`
+- `psych`
+- `pulsar`
+- `batchtools`
+- `huge`
+- `igraph`
+- `reshape2`
+- `randomcoloR`
+- `ggpubr`
+- `ggplot2`
 ```
 
 ## Load in data and wrangle
