@@ -21,6 +21,15 @@ To run the R scripts in this repository you will need to have the following pack
 - `NetGAM`
 
 ## Load in data and wrangle
+\
+![](static/Figure2.pdf)\
+**This web app allows the user to specify a taxonomic group of interest and a depth. Then, the web app summarizes and visualizes 18S tag-sequencing data that were collected at the San Pedro Ocean Time-Series (SPOT) site based on the user input.** 
+\
+\
+
+
+
+
 ```
 ### Load in data and wrangle ###
 # Load data
