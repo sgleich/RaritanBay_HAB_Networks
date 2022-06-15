@@ -33,6 +33,9 @@ To run the R scripts in this repository you will need to have the following pack
 
 
 ## Make a network at each site
+\
+![](static/Figure4.png)\
+**The R script "Figure4_Networks.R will demonstrate how to wrangle and plot data to produce a plot like this one.
 ```
 # Load data
 dfPhyto <- read.csv("RB_Phyto.csv",header=TRUE)
