@@ -19,6 +19,7 @@ To run the R scripts in this repository you will need to have the following pack
 - `ggpubr`
 - `ggplot2`
 - `NetGAM`
+- `missForest`
 
 ## Make taxa barplots for each site
 \
