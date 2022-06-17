@@ -48,3 +48,9 @@ To run the R scripts in this repository you will need to have the following pack
 \
 ![](static/Figure6.png)\
 **The R script "Figure6_Subnetworks.R" will demonstrate how make subnetworks like these.**
+
+## Generate random networks and plot network degree distributions. See how predicted networks compare to randomly generated networks. 
+\
+![](static/FigureSX.png)\
+**The R script "FigureSX_DegreeDist.R" will demonstrate how make subnetworks like these.**
+
