@@ -20,22 +20,31 @@ To run the R scripts in this repository you will need to have the following pack
 - `ggplot2`
 - `NetGAM`
 - `missForest`
+- `patchwork`
 
 ## Make taxa barplots for each site
 \
 ![](static/Figure2.png)\
-**The R script "Figure2_Taxabarplot.R will demonstrate how to wrangle and plot data to produce a plot like this one.** 
+**The R script "Figure2_Taxabarplot.R" will demonstrate how to wrangle and plot data to produce a plot like this one.** 
 
 
 ## Make taxa barplots pre-post Hurricane Sandy
 \
 ![](static/Figure3.png)\
-**The R script "Figure3_Taxabarplot.R will demonstrate how to wrangle and plot data to produce a plot like this one.** 
+**The R script "Figure3_Taxabarplot.R" will demonstrate how to wrangle and plot data to produce a plot like this one.** 
 
 
 ## Make a network at each site
 \
 ![](static/Figure4.png)\
-**The R script "Figure4_Networks.R will demonstrate how to wrangle and plot data to produce a plot like this one.**
+**The R script "Figure4_Networks.R" will demonstrate how to produce networks like the those depicted here.**
 
-## To be continue
+## Look at the Site 6 HAB Associations in more detail (biotic vs. abiotic edges, positive vs. negative edges, and taxonomic breakdown of edges) 
+\
+![](static/Figure5.png)\
+**The R script "Figure5_AssocBreakdown.R" will demonstrate how to wrangle and plot data to produce a plots like these.**
+
+## Look at the variables that are associated with specific HAB species of interest.
+\
+![](static/Figure6.png)\
+**The R script "Figure6_Subnetworks.R" will demonstrate how make subnetworks like these.**
