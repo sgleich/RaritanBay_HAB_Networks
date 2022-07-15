@@ -78,6 +78,9 @@ makeNet <- function(df,site){
   gamOut <- left_join(gamOut,environ)
   gamOut$X <- NULL
   
+  gamOut <- missForest(gamOut)
+  gamOut <- gamOut$ximp
+  
   # Glasso
   gamOut <- huge.npn(gamOut)
   lams  <- getLamPath(getMaxCov(as.matrix(gamOut)), .01, len=30)
