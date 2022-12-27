@@ -57,6 +57,7 @@ dfTotal$DEPTH <- NULL
 dfTotal$SITE <- as.numeric(dfTotal$SITE)
 
 # Make network
+set.seed(100)                      
 makeNet <- function(df,site){
   dfSite <- subset(df,SITE==site)
   dfSite$X <- as.character(dfSite$X)
