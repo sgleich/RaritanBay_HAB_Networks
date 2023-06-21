@@ -47,9 +47,6 @@ environ$SITE <- NULL
 colnames(environ) <- c("TEMP","pH","SAL","DO","Secchi","NO3","NH4","SRP","Si","X")
 environ <- mutate_all(environ, function(x) as.numeric(as.character(x)))
 
-environImp <- missForest::missForest(environ)
-environImp <- environImp$ximp
-
 dfTotal$SEAS <- NULL
 dfTotal$DATE <- NULL
 dfTotal$SEASON <- NULL
