@@ -82,7 +82,7 @@ makeNet <- function(df,site){
   # Glasso
   gamOut <- huge.npn(gamOut)
   lams  <- getLamPath(getMaxCov(as.matrix(gamOut)), .01, len=30)
-  hugeargs <- list(lambda=lams, verbose=FALSE)
+  hugeargs <- list(lambda=lams, verbose=FALSE, method='glasso')
   netOut <- batch.pulsar(gamOut, fun=huge::huge, fargs=hugeargs,rep.num=50, criterion='stars')
   fit <- refit(netOut)$refit
   fit.fin <- fit$stars
